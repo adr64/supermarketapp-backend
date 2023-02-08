@@ -26,11 +26,12 @@ public class JWTTokenValidatorFilter  extends OncePerRequestFilter {
             throws ServletException, IOException {
         String jwt = request.getHeader(SecurityConstants.JWT_HEADER);
         if (null != jwt) {
-            jwt = jwt.startsWith("Bearer ") ? jwt.substring(7) : jwt;
+            if (jwt.startsWith("Bearer")) {
+                jwt = jwt.substring(7);
+            }
             try {
                 SecretKey key = Keys.hmacShaKeyFor(
                         SecurityConstants.JWT_KEY.getBytes(StandardCharsets.UTF_8));
-
                 Claims claims = Jwts.parserBuilder()
                         .setSigningKey(key)
                         .build()
@@ -51,7 +52,7 @@ public class JWTTokenValidatorFilter  extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return request.getServletPath().equals("/login");
+        return request.getServletPath().equals("/users/login");
     }
 
 }

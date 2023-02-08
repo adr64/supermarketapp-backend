@@ -30,7 +30,7 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
                 .cors().configurationSource((request) ->  {
                     CorsConfiguration config = new CorsConfiguration();
-                    config.setAllowedOrigins(Arrays.asList("http://localhost", "http://172.217.197.153", "https://172.217.197.153")); // Client IP:PORT
+                    config.setAllowedOrigins(Arrays.asList("http://localhost:3000", "http://172.217.197.153", "https://172.217.197.153")); // Client IP:PORT
                     config.setAllowedMethods(Collections.singletonList("*"));
                     config.setAllowCredentials(true);
                     config.setAllowedHeaders(Collections.singletonList("*"));
@@ -42,8 +42,8 @@ public class SecurityConfig {
                 .addFilterAfter(new JWTTokenGeneratorFilter(), BasicAuthenticationFilter.class)
                 .addFilterBefore(new JWTTokenValidatorFilter(), BasicAuthenticationFilter.class)
                 .authorizeHttpRequests()
-                .antMatchers("/samples").authenticated()
-                .antMatchers("/login", "/register", "/ping").permitAll()
+                .antMatchers("/samples", "/lists").authenticated()
+                .antMatchers("/users", "/ping").permitAll()
                 .and().httpBasic();
         return http.build();
     }

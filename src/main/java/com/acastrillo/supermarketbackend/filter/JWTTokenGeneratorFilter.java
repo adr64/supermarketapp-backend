@@ -42,7 +42,7 @@ public class JWTTokenGeneratorFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return !request.getServletPath().equals("/login");
+        return !request.getServletPath().equals("/users/login");
     }
 
     private String populateAuthorities(Collection<? extends GrantedAuthority> collection) {
