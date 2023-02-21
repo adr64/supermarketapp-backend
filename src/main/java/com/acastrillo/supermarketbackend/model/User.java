@@ -1,5 +1,6 @@
 package com.acastrillo.supermarketbackend.model;
 
+import com.acastrillo.supermarketbackend.model.dto.UserDto;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -11,11 +12,19 @@ public class User {
     String email;
     String password;
 
+    public User() {}
+
     public User(String id, String name, String email, String password) {
         this.id = id;
         this.name = name;
         this.email = email;
         this.password = password;
+    }
+
+    public User(UserDto userDto) {
+        this.name = userDto.getName();
+        this.email = userDto.getEmail();
+        this.password = userDto.getPassword();
     }
 
     public String getId() {

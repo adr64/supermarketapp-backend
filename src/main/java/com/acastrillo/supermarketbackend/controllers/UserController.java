@@ -1,6 +1,9 @@
 package com.acastrillo.supermarketbackend.controllers;
 
+import com.acastrillo.supermarketbackend.model.BadRequestException;
 import com.acastrillo.supermarketbackend.model.User;
+import com.acastrillo.supermarketbackend.model.dto.UserDto;
+import com.acastrillo.supermarketbackend.model.dto.UserResponseDto;
 import com.acastrillo.supermarketbackend.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,52 +18,46 @@ public class UserController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
     @Autowired
     private UserRepository userRepository;
 
     @PostMapping(path = "/users", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> registerUser(@RequestBody User user) {
-        User savedUser = null;
-        ResponseEntity<String> response = null;
-        HttpStatus errorStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    public ResponseEntity<UserResponseDto> registerUser(@RequestBody UserDto userDto) {
+        UserResponseDto responseDto;
         try {
-            if(user.getEmail() == null || user.getPassword() == null || user.getName() == null) {
-                errorStatus = HttpStatus.BAD_REQUEST;
-                throw new Exception("Please send all required data");
+            if(userDto.getEmail() == null || userDto.getPassword() == null || userDto.getName() == null) {
+                throw new BadRequestException("Please send all required data");
             }
-            if(userRepository.findByEmail(user.getEmail()) != null) {
-                errorStatus = HttpStatus.BAD_REQUEST;
-                throw new Exception("Email provided is already registered");
+            if(userRepository.findByEmail(userDto.getEmail()) != null) {
+                throw new BadRequestException("Email provided is already registered");
             }
-            String hashPwd = passwordEncoder.encode(user.getPassword());
-            user.setPassword(hashPwd);
-            savedUser = userRepository.save(user);
-            if (savedUser.getId() != null) {
-                response = ResponseEntity
-                        .status(HttpStatus.CREATED)
-                        .body(user.toString());
-            }
+            String hashPwd = passwordEncoder.encode(userDto.getPassword());
+            User user = new User(userDto);
+            User savedUser = userRepository.save(user);
+            responseDto = new UserResponseDto(savedUser.getId(), savedUser.getName(), savedUser.getEmail(), "Success");
+            return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
+        } catch (BadRequestException ex) {
+            responseDto = new UserResponseDto(null, null, null, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(responseDto);
         } catch (Exception ex) {
-            response = ResponseEntity
-                    .status(errorStatus)
-                    .body("{\"message\": \"" + ex.getMessage()+"\"}");
+            ex.printStackTrace();
+            responseDto = new UserResponseDto(null, null, null, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDto);
         }
-        return response;
     }
 
-    @PostMapping(path = "/users/login", consumes = MediaType.APPLICATION_JSON_VALUE,  produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<String> getInfoAfterLogin(Authentication authentication) {
-        ResponseEntity<String> response = null;
-        HttpStatus errorStatus = HttpStatus.INTERNAL_SERVER_ERROR;
+    @PostMapping(path = "/users/login", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<UserResponseDto> getInfoAfterLogin(Authentication authentication) {
+        UserResponseDto responseDto;
         try {
             User user = userRepository.findByEmail(authentication.getName());
-            response = ResponseEntity.
-                    status(HttpStatus.OK).body(user.toString());
+            responseDto = new UserResponseDto(user);
+            return ResponseEntity.status(HttpStatus.OK).body(responseDto);
         } catch (Exception ex) {
-            response = ResponseEntity
-                    .status(errorStatus)
-                    .body("{\"message\": \"" + ex.getMessage()+"\"}");
+            responseDto = new UserResponseDto(null, null, null, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(responseDto);
         }
-        return response;
     }
+
 }
